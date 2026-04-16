@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Add Device{% endblock %}
+
+{% block content %}
+<div class="toolbar">
+    <div class="toolbar-left">
+        <a href="{% url 'device_list' %}" class="btn btn-secondary btn-sm">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Back to Devices
+        </a>
+    </div>
+</div>
+
+<div class="card" style="max-width: 720px;">
+    <div class="card-header">
+        <h3>Add New Device</h3>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                {% if field.name == 'groups' %}
+                <div class="form-group">
+                    <label>{{ field.label }}</label>
+                    <div class="checkbox-list" style="max-height:200px;overflow-y:auto;border:1px solid var(--border-color);border-radius:8px;padding:8px;">
+                        {% for checkbox in field %}
+                        <label class="checkbox-item" style="display:flex;align-items:center;gap:8px;padding:6px 8px;cursor:pointer;">
+                            {{ checkbox.tag }}
+                            <span>{{ checkbox.choice_label }}</span>
+                        </label>
+                        {% empty %}
+                        <p style="color:var(--text-secondary);margin:0;font-size:13px;">No groups yet. <a href="{% url 'group_create' %}">Create one</a></p>
+                        {% endfor %}
+                    </div>
+                    {% if field.errors %}
+                    <span style="color: #ef4444; font-size: 13px;">{{ field.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                    <small style="color:var(--text-secondary);">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% if field.errors %}
+                    <span style="color: #ef4444; font-size: 13px;">{{ field.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+            {% endfor %}
+            <div style="display:flex;gap:12px;margin-top:24px;">
+                <button type="submit" class="btn btn-primary">Create Device</button>
+                <a href="{% url 'device_list' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

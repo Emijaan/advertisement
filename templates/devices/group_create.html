@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Create Group{% endblock %}
+
+{% block content %}
+<div class="toolbar">
+    <div class="toolbar-left">
+        <a href="{% url 'group_list' %}" class="btn btn-secondary btn-sm">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Back to Groups
+        </a>
+    </div>
+</div>
+
+<div class="card" style="max-width: 720px;">
+    <div class="card-header">
+        <h3>Create New Group</h3>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                <span style="color: #ef4444; font-size: 13px;">{{ field.errors.0 }}</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <div class="form-group" style="margin-top:24px;">
+                <label>Select Devices for this Group</label>
+                <div class="checkbox-list">
+                    {% for checkbox in devices_form.devices %}
+                    <label class="checkbox-item">
+                        {{ checkbox.tag }}
+                        <span>{{ checkbox.choice_label }}</span>
+                    </label>
+                    {% empty %}
+                    <p style="color:var(--text-secondary);">No devices available. <a href="{% url 'device_create' %}">Create one</a></p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div style="display:flex;gap:12px;margin-top:24px;">
+                <button type="submit" class="btn btn-primary">Create Group</button>
+                <a href="{% url 'group_list' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

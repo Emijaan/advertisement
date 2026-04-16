@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-label">Total Plays</span>
+            <div class="stat-icon blue">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            </div>
+        </div>
+        <div class="stat-value">{{ total_plays }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-label">Plays Today</span>
+            <div class="stat-icon green">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+        </div>
+        <div class="stat-value">{{ plays_today }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-label">Plays (30d)</span>
+            <div class="stat-icon purple">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+            </div>
+        </div>
+        <div class="stat-value">{{ plays_30d }}</div>
+    </div>
+</div>
+
+<div class="grid-2" style="margin-bottom:24px;">
+    <div class="card">
+        <div class="card-header"><h3>Plays Over Time (30 Days)</h3></div>
+        <div class="card-body">
+            <div class="chart-container">
+                <canvas id="playsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><h3>Top Ads by Plays</h3></div>
+        <div class="card-body">
+            <div class="chart-container">
+                <canvas id="topAdsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="grid-2" style="margin-bottom:24px;">
+    <div class="card">
+        <div class="card-header"><h3>Top Devices</h3></div>
+        <div class="card-body" style="padding:0;">
+            <table>
+                <thead>
+                    <tr><th>Device</th><th style="text-align:right;">Plays</th></tr>
+                </thead>
+                <tbody>
+                    {% for d in top_devices %}
+                    <tr>
+                        <td style="font-weight:500;">{{ d.device__device_name }}</td>
+                        <td style="text-align:right;">
+                            <span class="badge badge-info">{{ d.count }}</span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="2" style="text-align:center;color:var(--text-secondary);padding:24px;">No data</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><h3>Top Ads</h3></div>
+        <div class="card-body" style="padding:0;">
+            <table>
+                <thead>
+                    <tr><th>Ad</th><th style="text-align:right;">Plays</th></tr>
+                </thead>
+                <tbody>
+                    {% for a in top_ads %}
+                    <tr>
+                        <td style="font-weight:500;">{{ a.ad__title }}</td>
+                        <td style="text-align:right;">
+                            <span class="badge badge-info">{{ a.count }}</span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="2" style="text-align:center;color:var(--text-secondary);padding:24px;">No data</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><h3>Recent Play Logs</h3></div>
+    <div class="card-body" style="padding:0;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Ad</th>
+                    <th>Device</th>
+                    <th>Played At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in recent_logs %}
+                <tr>
+                    <td style="font-weight:500;">{{ log.ad.title }}</td>
+                    <td>{{ log.device.device_name }}</td>
+                    <td>{{ log.played_at|date:"M d, Y H:i:s" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" style="text-align:center;color:var(--text-secondary);padding:32px;">No play logs yet</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script>
+const labels = {{ chart_labels|safe }};
+const data = {{ chart_data|safe }};
+
+new Chart(document.getElementById('playsChart'), {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'Plays',
+            data: data,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59,130,246,0.1)',
+            fill: true, tension: 0.4, pointRadius: 0, borderWidth: 2,
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { grid: { display: false } },
+            y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }
+        }
+    }
+});
+
+const topAdsLabels = [{% for a in top_ads %}"{{ a.ad__title|truncatechars:15 }}",{% endfor %}];
+const topAdsData = [{% for a in top_ads %}{{ a.count }},{% endfor %}];
+
+new Chart(document.getElementById('topAdsChart'), {
+    type: 'bar',
+    data: {
+        labels: topAdsLabels,
+        datasets: [{
+            label: 'Plays',
+            data: topAdsData,
+            backgroundColor: ['#3b82f6','#8b5cf6','#06b6d4','#10b981','#f59e0b','#ef4444','#ec4899','#6366f1','#14b8a6','#f97316'],
+            borderRadius: 6,
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { grid: { display: false } },
+            y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }
+        }
+    }
+});
+</script>
+{% endblock %}

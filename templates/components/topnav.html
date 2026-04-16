@@ -1,0 +1,49 @@
+<header class="topnav">
+    <div class="topnav-left">
+        <button class="btn-icon" onclick="toggleSidebar()" style="display:none;" id="sidebar-toggle">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+        </button>
+        <h2>{{ page_title|default:"Dashboard" }}</h2>
+    </div>
+    <div class="topnav-right">
+        <!-- Kill Switch -->
+        <form method="post" action="{% url 'kill_switch_toggle' %}" style="margin:0;" onsubmit="return confirm('{% if kill_switch_active %}Deactivate kill switch? Ads will resume playing.{% else %}ACTIVATE KILL SWITCH? This will stop ALL ads on ALL devices immediately!{% endif %}');">
+            {% csrf_token %}
+            {% if kill_switch_active %}
+            <button type="submit" class="kill-switch-btn kill-switch-active" title="Kill switch is ACTIVE — Click to deactivate">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18.36 6.64A9 9 0 1 1 5.64 6.64"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+                ADS STOPPED
+            </button>
+            {% else %}
+            <button type="submit" class="kill-switch-btn" title="Emergency: Stop all ads immediately">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18.36 6.64A9 9 0 1 1 5.64 6.64"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+                Kill Switch
+            </button>
+            {% endif %}
+        </form>
+
+        <button class="btn-icon" onclick="toggleTheme()" title="Toggle theme">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <div class="user-menu dropdown">
+            <div onclick="toggleDropdown(this)" style="display:flex;align-items:center;gap:8px;">
+                <div class="user-avatar">{{ request.user.username|first|upper }}</div>
+                <div class="user-info">
+                    <div class="name">{{ request.user.get_full_name|default:request.user.username }}</div>
+                    <div class="role">{{ request.user.role|default:"Admin" }}</div>
+                </div>
+            </div>
+            <div class="dropdown-menu">
+                <a href="{% url 'user_settings' %}">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                    Settings
+                </a>
+                <div class="divider"></div>
+                <a href="{% url 'logout' %}" style="color:#ef4444;">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                    Logout
+                </a>
+            </div>
+        </div>
+    </div>
+</header>

@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Devices{% endblock %}
+
+{% block content %}
+<div class="toolbar">
+    <div class="toolbar-left">
+        <form method="get" style="display:flex;gap:12px;flex:1;">
+            <div class="search-box" style="flex:1;max-width:360px;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                <input type="text" name="q" value="{{ query }}" placeholder="Search devices...">
+            </div>
+            <select name="status" class="form-control" style="width:140px;" onchange="this.form.submit()">
+                <option value="">All Status</option>
+                <option value="online" {% if status_filter == 'online' %}selected{% endif %}>Online</option>
+                <option value="offline" {% if status_filter == 'offline' %}selected{% endif %}>Offline</option>
+            </select>
+        </form>
+    </div>
+    <div class="toolbar-right">
+        <a href="{% url 'device_create' %}" class="btn btn-primary">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            Add Device
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body" style="padding:0;">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Device</th>
+                        <th>Device ID</th>
+                        <th>Location</th>
+                        <th>Assigned Ads</th>
+                        <th>Last Active</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for device in devices %}
+                    <tr>
+                        <td><a href="{% url 'device_detail' device.pk %}" style="font-weight:500;color:var(--primary);">{{ device.device_name }}</a></td>
+                        <td><code style="font-size:12px;background:var(--bg-secondary);padding:2px 6px;border-radius:4px;">{{ device.device_id }}</code></td>
+                        <td>{{ device.location }}</td>
+                        <td><span class="badge badge-info">{{ device.ad_count }} ads</span></td>
+                        <td style="font-size:13px;">{% if device.last_active %}{{ device.last_active|timesince }} ago{% else %}-{% endif %}</td>
+                        <td>
+                            {% if device.is_online %}
+                            <span class="badge badge-success"><span class="dot"></span> Online</span>
+                            {% else %}
+                            <span class="badge badge-gray"><span class="dot"></span> Offline</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{% url 'device_detail' device.pk %}" class="btn btn-secondary btn-sm" title="View">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </a>
+                                <a href="{% url 'device_edit' device.pk %}" class="btn btn-secondary btn-sm" title="Edit">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </a>
+                                <form method="post" action="{% url 'device_delete' device.pk %}" style="display:inline;" onsubmit="return confirm('Delete this device?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Delete">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                                <h3>No devices found</h3>
+                                <p>Add your first display device to get started.</p>
+                                <a href="{% url 'device_create' %}" class="btn btn-primary" style="margin-top:16px;">Add Device</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% if devices.has_other_pages %}
+    <div class="pagination">
+        <span>Showing {{ devices.start_index }} to {{ devices.end_index }} of {{ devices.paginator.count }} devices</span>
+        <div class="pagination-links">
+            {% if devices.has_previous %}
+            <a href="?page={{ devices.previous_page_number }}&q={{ query }}&status={{ status_filter }}">&laquo;</a>
+            {% endif %}
+            {% for num in devices.paginator.page_range %}
+                {% if devices.number == num %}
+                <span class="active">{{ num }}</span>
+                {% elif num > devices.number|add:'-3' and num < devices.number|add:'3' %}
+                <a href="?page={{ num }}&q={{ query }}&status={{ status_filter }}">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+            {% if devices.has_next %}
+            <a href="?page={{ devices.next_page_number }}&q={{ query }}&status={{ status_filter }}">&raquo;</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

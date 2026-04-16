@@ -1,0 +1,53 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AdDisplay{% endblock %} | AdDisplay Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    {% if kill_switch_active %}
+    <div class="kill-switch-banner">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <strong>KILL SWITCH ACTIVE</strong> — All ads are stopped across all devices.
+        {% if kill_switch %} Activated by {{ kill_switch.activated_by }} at {{ kill_switch.activated_at|date:"M d, Y H:i" }}{% endif %}
+    </div>
+    {% endif %}
+
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="message message-{{ message.tags }}">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                {% if message.tags == 'success' %}
+                <path d="M20 6L9 17l-5-5"/>
+                {% elif message.tags == 'error' %}
+                <circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/>
+                {% else %}
+                <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+                {% endif %}
+            </svg>
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="layout">
+        {% include "components/sidebar.html" %}
+        <div class="main-content">
+            {% include "components/topnav.html" %}
+            <div class="page-content">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

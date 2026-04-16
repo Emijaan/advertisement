@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-label">Total Ads</span>
+            <div class="stat-icon blue">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+            </div>
+        </div>
+        <div class="stat-value">{{ total_ads }}</div>
+        <div class="stat-change up">{{ active_ads }} active</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-label">Total Devices</span>
+            <div class="stat-icon purple">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            </div>
+        </div>
+        <div class="stat-value">{{ total_devices }}</div>
+        <div class="stat-change up">{{ online_devices }} online</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-label">Online Devices</span>
+            <div class="stat-icon green">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+            </div>
+        </div>
+        <div class="stat-value">{{ online_devices }}</div>
+        <div class="stat-change">of {{ total_devices }} devices</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-label">Total Ad Plays</span>
+            <div class="stat-icon orange">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            </div>
+        </div>
+        <div class="stat-value">{{ total_plays }}</div>
+        <div class="stat-change up">all time</div>
+    </div>
+</div>
+
+<div class="grid-2" style="margin-bottom: 32px;">
+    <div class="card">
+        <div class="card-header">
+            <h3>Ad Plays (Last 30 Days)</h3>
+        </div>
+        <div class="card-body">
+            <div class="chart-container">
+                <canvas id="playsChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">
+            <h3>Device Status</h3>
+            <a href="{% url 'device_list' %}" class="btn btn-secondary btn-sm">View All</a>
+        </div>
+        <div class="card-body" style="padding:0;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Device</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for device in devices %}
+                    <tr>
+                        <td style="font-weight:500;">{{ device.device_name }}</td>
+                        <td>{{ device.location }}</td>
+                        <td>
+                            {% if device.is_online %}
+                            <span class="badge badge-success"><span class="dot"></span> Online</span>
+                            {% else %}
+                            <span class="badge badge-gray"><span class="dot"></span> Offline</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" style="text-align:center;color:var(--text-secondary);padding:32px;">No devices yet</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>Recent Ads</h3>
+        <a href="{% url 'ad_list' %}" class="btn btn-secondary btn-sm">View All</a>
+    </div>
+    <div class="card-body" style="padding:0;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Duration</th>
+                    <th>Priority</th>
+                    <th>Schedule</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ad in recent_ads %}
+                <tr>
+                    <td style="font-weight:500;">{{ ad.title }}</td>
+                    <td>{{ ad.duration }}s</td>
+                    <td>
+                        {% if ad.priority == 1 %}
+                        <span class="badge badge-danger">High</span>
+                        {% elif ad.priority == 2 %}
+                        <span class="badge badge-warning">Medium</span>
+                        {% else %}
+                        <span class="badge badge-info">Low</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ ad.start_date|date:"M d" }} - {{ ad.end_date|date:"M d" }}</td>
+                    <td>
+                        {% if ad.is_active %}
+                        <span class="badge badge-success"><span class="dot"></span> Active</span>
+                        {% else %}
+                        <span class="badge badge-gray"><span class="dot"></span> Inactive</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" style="text-align:center;color:var(--text-secondary);padding:32px;">No ads yet. <a href="{% url 'ad_create' %}">Create one</a></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script>
+const ctx = document.getElementById('playsChart');
+if (ctx) {
+    const labels = {{ chart_labels|safe }};
+    const data = {{ chart_data|safe }};
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Plays',
+                data: data,
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59,130,246,0.1)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 0,
+                pointHoverRadius: 5,
+                borderWidth: 2,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+                y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 } } }
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

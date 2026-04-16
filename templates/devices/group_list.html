@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Device Groups{% endblock %}
+
+{% block content %}
+<div class="toolbar">
+    <div class="toolbar-left">
+        <form method="get" style="display:flex;gap:12px;flex:1;">
+            <div class="search-box" style="flex:1;max-width:360px;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                <input type="text" name="q" value="{{ query }}" placeholder="Search groups...">
+            </div>
+        </form>
+    </div>
+    <div class="toolbar-right">
+        <a href="{% url 'group_create' %}" class="btn btn-primary">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            Create Group
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body" style="padding:0;">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Group Name</th>
+                        <th>Description</th>
+                        <th>Devices</th>
+                        <th>Assigned Ads</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for group in groups %}
+                    <tr>
+                        <td><a href="{% url 'group_detail' group.pk %}" style="font-weight:500;color:var(--primary);">{{ group.name }}</a></td>
+                        <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ group.description|default:"-" }}</td>
+                        <td><span class="badge badge-info">{{ group.device_count }} devices</span></td>
+                        <td><span class="badge badge-info">{{ group.ad_count }} ads</span></td>
+                        <td style="font-size:13px;">{{ group.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{% url 'group_detail' group.pk %}" class="btn btn-secondary btn-sm" title="View">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </a>
+                                <a href="{% url 'group_edit' group.pk %}" class="btn btn-secondary btn-sm" title="Edit">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </a>
+                                <form method="post" action="{% url 'group_delete' group.pk %}" style="display:inline;" onsubmit="return confirm('Delete this group? Devices will NOT be deleted.');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Delete">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                <h3>No groups yet</h3>
+                                <p>Create a device group to manage multiple displays together.</p>
+                                <a href="{% url 'group_create' %}" class="btn btn-primary" style="margin-top:16px;">Create Group</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% if groups.has_other_pages %}
+    <div class="pagination">
+        <span>Showing {{ groups.start_index }} to {{ groups.end_index }} of {{ groups.paginator.count }} groups</span>
+        <div class="pagination-links">
+            {% if groups.has_previous %}
+            <a href="?page={{ groups.previous_page_number }}&q={{ query }}">&laquo;</a>
+            {% endif %}
+            {% for num in groups.paginator.page_range %}
+                {% if groups.number == num %}
+                <span class="active">{{ num }}</span>
+                {% elif num > groups.number|add:'-3' and num < groups.number|add:'3' %}
+                <a href="?page={{ num }}&q={{ query }}">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+            {% if groups.has_next %}
+            <a href="?page={{ groups.next_page_number }}&q={{ query }}">&raquo;</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
