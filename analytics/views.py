@@ -16,24 +16,30 @@ def analytics_dashboard(request):
     today = timezone.now()
     thirty_days_ago = today - timedelta(days=30)
 
-    total_plays = PlayLog.objects.count()
-    plays_today = PlayLog.objects.filter(played_at__date=today.date()).count()
-    plays_30d = PlayLog.objects.filter(played_at__gte=thirty_days_ago).count()
+    # Filter data by ownership for non-SUPERADMIN
+    if request.user.role == 'SUPERADMIN':
+        plays_qs = PlayLog.objects.all()
+    else:
+        plays_qs = PlayLog.objects.filter(device__created_by=request.user)
+
+    total_plays = plays_qs.count()
+    plays_today = plays_qs.filter(played_at__date=today.date()).count()
+    plays_30d = plays_qs.filter(played_at__gte=thirty_days_ago).count()
 
     top_ads = (
-        PlayLog.objects.values('ad__title')
+        plays_qs.values('ad__title')
         .annotate(count=Count('id'))
         .order_by('-count')[:10]
     )
 
     top_devices = (
-        PlayLog.objects.values('device__device_name')
+        plays_qs.values('device__device_name')
         .annotate(count=Count('id'))
         .order_by('-count')[:10]
     )
 
     daily_plays = (
-        PlayLog.objects.filter(played_at__gte=thirty_days_ago)
+        plays_qs.filter(played_at__gte=thirty_days_ago)
         .annotate(date=TruncDate('played_at'))
         .values('date')
         .annotate(count=Count('id'))
@@ -43,7 +49,7 @@ def analytics_dashboard(request):
     chart_labels = [d['date'].strftime('%b %d') for d in daily_plays]
     chart_data = [d['count'] for d in daily_plays]
 
-    recent_logs = PlayLog.objects.select_related('ad', 'device').order_by('-played_at')[:20]
+    recent_logs = plays_qs.select_related('ad', 'device').order_by('-played_at')[:20]
 
     return render(request, 'analytics/dashboard.html', {
         'total_plays': total_plays,

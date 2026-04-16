@@ -1,6 +1,7 @@
 from django.db import models
+from django.conf import settings
 
-# Create your models here.
+
 class Device(models.Model):
     device_name = models.CharField(max_length=255)
     device_id = models.CharField(max_length=100, unique=True)
@@ -9,6 +10,7 @@ class Device(models.Model):
     is_online = models.BooleanField(default=False)
     last_active = models.DateTimeField(null=True, blank=True)
     assigned_ads = models.ManyToManyField('ads.Ad', blank=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='owned_devices')
 
     def __str__(self):
         return self.device_name
@@ -20,6 +22,7 @@ class DeviceGroup(models.Model):
     devices = models.ManyToManyField(Device, blank=True, related_name='groups')
     assigned_ads = models.ManyToManyField('ads.Ad', blank=True, related_name='device_groups')
     created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='owned_groups')
 
     def __str__(self):
         return self.name

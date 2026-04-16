@@ -141,12 +141,22 @@ def device_list(request):
     status_filter = request.GET.get('status', '')
     devices = Device.objects.all().annotate(ad_count=Count('assigned_ads')).order_by('device_name')
 
+    # Non-SUPERADMIN users see only their own devices
+    if request.user.role != 'SUPERADMIN':
+        devices = devices.filter(created_by=request.user)
+
     if query:
         devices = devices.filter(Q(device_name__icontains=query) | Q(location__icontains=query) | Q(device_id__icontains=query))
     if status_filter == 'online':
         devices = devices.filter(is_online=True)
     elif status_filter == 'offline':
         devices = devices.filter(is_online=False)
+
+    # Compute device quota for USER role
+    device_quota = None
+    if request.user.role == 'USER' and request.user.device_limit > 0:
+        owned_count = Device.objects.filter(created_by=request.user).count()
+        device_quota = {'used': owned_count, 'limit': request.user.device_limit, 'remaining': request.user.device_limit - owned_count}
 
     paginator = Paginator(devices, 10)
     page = request.GET.get('page')
@@ -156,38 +166,62 @@ def device_list(request):
         'devices': devices,
         'query': query,
         'status_filter': status_filter,
+        'device_quota': device_quota,
     })
 
 
 @login_required
 def device_detail(request, pk):
     device = get_object_or_404(Device, pk=pk)
+    # Non-SUPERADMIN can only view their own devices
+    if request.user.role != 'SUPERADMIN' and device.created_by != request.user:
+        messages.error(request, 'You do not have permission to view this device.')
+        return redirect('device_list')
     play_logs = PlayLog.objects.filter(device=device).select_related('ad').order_by('-played_at')[:20]
+
+    # Filter ads to only show user's own ads for assignment
+    if request.user.role != 'SUPERADMIN':
+        user_ads = Ad.objects.filter(created_by=request.user)
+    else:
+        user_ads = Ad.objects.all()
 
     if request.method == 'POST':
         form = DeviceAssignAdsForm(request.POST)
+        form.fields['ads'].queryset = user_ads
         if form.is_valid():
             device.assigned_ads.set(form.cleaned_data['ads'])
             messages.success(request, 'Assigned ads updated.')
             return redirect('device_detail', pk=pk)
     else:
         form = DeviceAssignAdsForm(initial={'ads': device.assigned_ads.all()})
+        form.fields['ads'].queryset = user_ads
 
     return render(request, 'devices/detail.html', {
         'device': device,
         'form': form,
         'play_logs': play_logs,
-        'all_ads': Ad.objects.all().order_by('title'),
+        'all_ads': user_ads.order_by('title'),
         'assigned_ad_ids': set(device.assigned_ads.values_list('pk', flat=True)),
     })
 
 
 @login_required
 def device_create(request):
+    # Enforce device limit for USER role
+    if request.user.role == 'USER' and request.user.device_limit > 0:
+        owned_count = Device.objects.filter(created_by=request.user).count()
+        if owned_count >= request.user.device_limit:
+            messages.error(request, f'You have reached your device limit ({request.user.device_limit}). Contact your administrator to increase it.')
+            return redirect('device_list')
+
     if request.method == 'POST':
         form = DeviceForm(request.POST)
+        if request.user.role != 'SUPERADMIN':
+            form.fields['groups'].queryset = DeviceGroup.objects.filter(created_by=request.user)
         if form.is_valid():
-            device = form.save()
+            device = form.save(commit=False)
+            device.created_by = request.user
+            device.save()
             groups = form.cleaned_data.get('groups')
             if groups:
                 for group in groups:
@@ -196,14 +230,21 @@ def device_create(request):
             return redirect('device_list')
     else:
         form = DeviceForm()
+        if request.user.role != 'SUPERADMIN':
+            form.fields['groups'].queryset = DeviceGroup.objects.filter(created_by=request.user)
     return render(request, 'devices/create.html', {'form': form})
 
 
 @login_required
 def device_edit(request, pk):
     device = get_object_or_404(Device, pk=pk)
+    if request.user.role != 'SUPERADMIN' and device.created_by != request.user:
+        messages.error(request, 'You do not have permission to edit this device.')
+        return redirect('device_list')
     if request.method == 'POST':
         form = DeviceForm(request.POST, instance=device)
+        if request.user.role != 'SUPERADMIN':
+            form.fields['groups'].queryset = DeviceGroup.objects.filter(created_by=request.user)
         if form.is_valid():
             device = form.save()
             # Update group memberships
@@ -217,12 +258,17 @@ def device_edit(request, pk):
             return redirect('device_detail', pk=pk)
     else:
         form = DeviceForm(instance=device)
+        if request.user.role != 'SUPERADMIN':
+            form.fields['groups'].queryset = DeviceGroup.objects.filter(created_by=request.user)
     return render(request, 'devices/edit.html', {'form': form, 'device': device})
 
 
 @login_required
 def device_delete(request, pk):
     device = get_object_or_404(Device, pk=pk)
+    if request.user.role != 'SUPERADMIN' and device.created_by != request.user:
+        messages.error(request, 'You do not have permission to delete this device.')
+        return redirect('device_list')
     if request.method == 'POST':
         device.delete()
         messages.success(request, 'Device deleted successfully.')
@@ -240,6 +286,10 @@ def group_list(request):
         device_count=Count('devices', distinct=True),
         ad_count=Count('assigned_ads', distinct=True),
     ).order_by('name')
+
+    # Non-SUPERADMIN users see only their own groups
+    if request.user.role != 'SUPERADMIN':
+        groups = groups.filter(created_by=request.user)
 
     if query:
         groups = groups.filter(Q(name__icontains=query) | Q(description__icontains=query))
@@ -259,39 +309,61 @@ def group_create(request):
     if request.method == 'POST':
         form = DeviceGroupForm(request.POST)
         devices_form = DeviceGroupDevicesForm(request.POST)
+        # Filter devices to user's own
+        if request.user.role != 'SUPERADMIN':
+            devices_form.fields['devices'].queryset = Device.objects.filter(created_by=request.user)
         if form.is_valid() and devices_form.is_valid():
-            group = form.save()
+            group = form.save(commit=False)
+            group.created_by = request.user
+            group.save()
             group.devices.set(devices_form.cleaned_data['devices'])
             messages.success(request, 'Group created successfully.')
             return redirect('group_detail', pk=group.pk)
     else:
         form = DeviceGroupForm()
         devices_form = DeviceGroupDevicesForm()
+        if request.user.role != 'SUPERADMIN':
+            devices_form.fields['devices'].queryset = Device.objects.filter(created_by=request.user)
     return render(request, 'devices/group_create.html', {'form': form, 'devices_form': devices_form})
 
 
 @login_required
 def group_detail(request, pk):
     group = get_object_or_404(DeviceGroup, pk=pk)
+    if request.user.role != 'SUPERADMIN' and group.created_by != request.user:
+        messages.error(request, 'You do not have permission to view this group.')
+        return redirect('group_list')
+
+    # Filter ads and devices to user's own
+    if request.user.role != 'SUPERADMIN':
+        user_ads = Ad.objects.filter(created_by=request.user)
+        user_devices = Device.objects.filter(created_by=request.user)
+    else:
+        user_ads = Ad.objects.all()
+        user_devices = Device.objects.all()
 
     if request.method == 'POST':
         action = request.POST.get('action', '')
         if action == 'assign_ads':
             ads_form = DeviceGroupAssignAdsForm(request.POST)
+            ads_form.fields['ads'].queryset = user_ads
             if ads_form.is_valid():
                 group.assigned_ads.set(ads_form.cleaned_data['ads'])
                 messages.success(request, 'Assigned ads updated for group.')
                 return redirect('group_detail', pk=pk)
         elif action == 'assign_devices':
             devices_form = DeviceGroupDevicesForm(request.POST)
+            devices_form.fields['devices'].queryset = user_devices
             if devices_form.is_valid():
                 group.devices.set(devices_form.cleaned_data['devices'])
                 messages.success(request, 'Group devices updated.')
                 return redirect('group_detail', pk=pk)
 
     ads_form = DeviceGroupAssignAdsForm(initial={'ads': group.assigned_ads.all()})
+    ads_form.fields['ads'].queryset = user_ads
     devices_form = DeviceGroupDevicesForm(initial={'devices': group.devices.all()})
-    all_ads = Ad.objects.all().order_by('title')
+    devices_form.fields['devices'].queryset = user_devices
+    all_ads = user_ads.order_by('title')
     assigned_ad_ids = set(group.assigned_ads.values_list('pk', flat=True))
 
     return render(request, 'devices/group_detail.html', {
@@ -306,9 +378,14 @@ def group_detail(request, pk):
 @login_required
 def group_edit(request, pk):
     group = get_object_or_404(DeviceGroup, pk=pk)
+    if request.user.role != 'SUPERADMIN' and group.created_by != request.user:
+        messages.error(request, 'You do not have permission to edit this group.')
+        return redirect('group_list')
     if request.method == 'POST':
         form = DeviceGroupForm(request.POST, instance=group)
         devices_form = DeviceGroupDevicesForm(request.POST)
+        if request.user.role != 'SUPERADMIN':
+            devices_form.fields['devices'].queryset = Device.objects.filter(created_by=request.user)
         if form.is_valid() and devices_form.is_valid():
             form.save()
             group.devices.set(devices_form.cleaned_data['devices'])
@@ -317,12 +394,17 @@ def group_edit(request, pk):
     else:
         form = DeviceGroupForm(instance=group)
         devices_form = DeviceGroupDevicesForm(initial={'devices': group.devices.all()})
+        if request.user.role != 'SUPERADMIN':
+            devices_form.fields['devices'].queryset = Device.objects.filter(created_by=request.user)
     return render(request, 'devices/group_edit.html', {'form': form, 'devices_form': devices_form, 'group': group})
 
 
 @login_required
 def group_delete(request, pk):
     group = get_object_or_404(DeviceGroup, pk=pk)
+    if request.user.role != 'SUPERADMIN' and group.created_by != request.user:
+        messages.error(request, 'You do not have permission to delete this group.')
+        return redirect('group_list')
     if request.method == 'POST':
         group.delete()
         messages.success(request, 'Group deleted successfully.')

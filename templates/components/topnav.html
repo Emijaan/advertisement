@@ -39,10 +39,12 @@
                     Settings
                 </a>
                 <div class="divider"></div>
-                <a href="{% url 'logout' %}" style="color:#ef4444;">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-                    Logout
-                </a>
+                <form method="post" action="{% url 'logout' %}" style="margin:0;">{% csrf_token %}
+                    <button type="submit" style="background:none;border:none;cursor:pointer;color:#ef4444;display:flex;align-items:center;gap:8px;padding:8px 16px;width:100%;font:inherit;">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                        Logout
+                    </button>
+                </form>
             </div>
         </div>
     </div>

@@ -13,18 +13,28 @@ from analytics.models import PlayLog
 
 @login_required
 def dashboard(request):
-    total_ads = Ad.objects.count()
-    active_ads = Ad.objects.filter(is_active=True).count()
-    total_devices = Device.objects.count()
-    online_devices = Device.objects.filter(is_online=True).count()
-    total_plays = PlayLog.objects.count()
+    # Filter data by ownership for non-SUPERADMIN
+    if request.user.role == 'SUPERADMIN':
+        ads_qs = Ad.objects.all()
+        devices_qs = Device.objects.all()
+        plays_qs = PlayLog.objects.all()
+    else:
+        ads_qs = Ad.objects.filter(created_by=request.user)
+        devices_qs = Device.objects.filter(created_by=request.user)
+        plays_qs = PlayLog.objects.filter(device__created_by=request.user)
 
-    devices = Device.objects.all()[:5]
-    recent_ads = Ad.objects.all().order_by('-created_at')[:5]
+    total_ads = ads_qs.count()
+    active_ads = ads_qs.filter(is_active=True).count()
+    total_devices = devices_qs.count()
+    online_devices = devices_qs.filter(is_online=True).count()
+    total_plays = plays_qs.count()
+
+    devices = devices_qs[:5]
+    recent_ads = ads_qs.order_by('-created_at')[:5]
 
     thirty_days_ago = timezone.now() - timedelta(days=30)
     daily_plays = (
-        PlayLog.objects.filter(played_at__gte=thirty_days_ago)
+        plays_qs.filter(played_at__gte=thirty_days_ago)
         .annotate(date=TruncDate('played_at'))
         .values('date')
         .annotate(count=Count('id'))

@@ -5,7 +5,7 @@ from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from users.views import profile, user_settings, playback_control
+from users.views import profile, user_settings, playback_control, user_list, user_create, user_edit, user_delete
 from devices.views import device_login, device_ads, device_play_log, device_list, device_detail, device_create, device_edit, device_delete, group_list, group_create, group_detail, group_edit, group_delete
 from ads.views import ad_list, ad_create, ad_edit, ad_delete, ad_toggle, kill_switch_toggle
 from analytics.views import analytics_dashboard
@@ -53,6 +53,12 @@ urlpatterns = [
 
     # Settings
     path('settings/', user_settings, name='user_settings'),
+
+    # User Management (SUPERADMIN only)
+    path('users/', user_list, name='user_list'),
+    path('users/create/', user_create, name='user_create'),
+    path('users/<int:pk>/edit/', user_edit, name='user_edit'),
+    path('users/<int:pk>/delete/', user_delete, name='user_delete'),
 
     # API endpoints (for Android app)
     path('api/', include(router.urls)),

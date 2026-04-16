@@ -15,6 +15,10 @@ def ad_list(request):
     status_filter = request.GET.get('status', '')
     ads = Ad.objects.all().order_by('-created_at')
 
+    # Non-SUPERADMIN users see only their own ads
+    if request.user.role != 'SUPERADMIN':
+        ads = ads.filter(created_by=request.user)
+
     if query:
         ads = ads.filter(Q(title__icontains=query) | Q(description__icontains=query))
     if status_filter == 'active':
@@ -38,7 +42,9 @@ def ad_create(request):
     if request.method == 'POST':
         form = AdForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            ad = form.save(commit=False)
+            ad.created_by = request.user
+            ad.save()
             messages.success(request, 'Ad created successfully.')
             return redirect('ad_list')
     else:
@@ -49,6 +55,10 @@ def ad_create(request):
 @login_required
 def ad_edit(request, pk):
     ad = get_object_or_404(Ad, pk=pk)
+    # Non-SUPERADMIN can only edit their own ads
+    if request.user.role != 'SUPERADMIN' and ad.created_by != request.user:
+        messages.error(request, 'You do not have permission to edit this ad.')
+        return redirect('ad_list')
     if request.method == 'POST':
         form = AdForm(request.POST, request.FILES, instance=ad)
         if form.is_valid():
@@ -63,6 +73,9 @@ def ad_edit(request, pk):
 @login_required
 def ad_delete(request, pk):
     ad = get_object_or_404(Ad, pk=pk)
+    if request.user.role != 'SUPERADMIN' and ad.created_by != request.user:
+        messages.error(request, 'You do not have permission to delete this ad.')
+        return redirect('ad_list')
     if request.method == 'POST':
         ad.delete()
         messages.success(request, 'Ad deleted successfully.')
@@ -72,6 +85,9 @@ def ad_delete(request, pk):
 @login_required
 def ad_toggle(request, pk):
     ad = get_object_or_404(Ad, pk=pk)
+    if request.user.role != 'SUPERADMIN' and ad.created_by != request.user:
+        messages.error(request, 'You do not have permission to modify this ad.')
+        return redirect('ad_list')
     if request.method == 'POST':
         ad.is_active = not ad.is_active
         ad.save()

@@ -16,6 +16,9 @@ def page_title(request):
         'analytics_dashboard': 'Analytics',
         'playback_control': 'Playback Control',
         'user_settings': 'Settings',
+        'user_list': 'Users',
+        'user_create': 'Create User',
+        'user_edit': 'Edit User',
     }
     url_name = ''
     if request.resolver_match:
