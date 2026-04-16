@@ -1,7 +1,11 @@
 <aside class="sidebar">
     <div class="sidebar-header">
+        {% if site_branding.logo %}
+        <img src="{{ site_branding.logo.url }}" alt="{{ site_branding.site_name }}" class="sidebar-logo-img">
+        {% else %}
         <div class="logo">▶</div>
-        <h1>DigiPlay</h1>
+        {% endif %}
+        <h1>{{ site_branding.site_name }}</h1>
     </div>
     <nav class="sidebar-nav">
         <div class="nav-section">
@@ -40,6 +44,10 @@
             <a href="{% url 'user_list' %}" class="nav-link {% if 'user_' in request.resolver_match.url_name %}active{% endif %}">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 Users
+            </a>
+            <a href="{% url 'branding_settings' %}" class="nav-link {% if request.resolver_match.url_name == 'branding_settings' %}active{% endif %}">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                Branding
             </a>
             {% endif %}
             <a href="{% url 'user_settings' %}" class="nav-link {% if request.resolver_match.url_name == 'user_settings' %}active{% endif %}">

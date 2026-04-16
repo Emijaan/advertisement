@@ -1,6 +1,31 @@
 from django.db import models
 from django.conf import settings
 
+
+class SiteBranding(models.Model):
+    """Singleton model for site logo and favicon."""
+    logo = models.ImageField(upload_to='branding/', blank=True, null=True, help_text='Site logo displayed in sidebar and login page.')
+    favicon = models.ImageField(upload_to='branding/', blank=True, null=True, help_text='Favicon (recommended 32x32 or 64x64 PNG/ICO).')
+    site_name = models.CharField(max_length=100, default='DigiPlay', help_text='Site name shown in sidebar and page titles.')
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Site Branding'
+        verbose_name_plural = 'Site Branding'
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def get_solo(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def __str__(self):
+        return f"Site Branding ({self.site_name})"
+
+
 # Create your models here.
 class Ad(models.Model):
     title = models.CharField(max_length=255)

@@ -19,6 +19,7 @@ def page_title(request):
         'user_list': 'Users',
         'user_create': 'Create User',
         'user_edit': 'Edit User',
+        'branding_settings': 'Branding',
     }
     url_name = ''
     if request.resolver_match:
@@ -34,3 +35,10 @@ def kill_switch_status(request):
         'kill_switch_active': ks.is_active if ks else False,
         'kill_switch': ks,
     }
+
+
+def site_branding(request):
+    """Add site branding (logo, favicon, site_name) to every template."""
+    from ads.models import SiteBranding
+    branding = SiteBranding.get_solo()
+    return {'site_branding': branding}

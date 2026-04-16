@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Branding{% endblock %}
+
+{% block content %}
+<div style="max-width:720px;">
+    <div class="card" style="margin-bottom:24px;">
+        <div class="card-header">
+            <h3>Site Branding</h3>
+            <p style="color:var(--text-secondary);font-size:13px;margin-top:4px;">Manage your site logo, favicon, and name. Changes apply across the entire platform.</p>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!-- Site Name -->
+                <div class="form-group">
+                    <label for="site_name">Site Name</label>
+                    <input type="text" name="site_name" id="site_name" class="form-control" value="{{ branding.site_name }}" placeholder="DigiPlay" required>
+                    <small style="color:var(--text-secondary);">Shown in the sidebar header and page titles.</small>
+                </div>
+
+                <!-- Logo Upload -->
+                <div class="form-group">
+                    <label>Site Logo</label>
+                    <div class="branding-preview-area">
+                        {% if branding.logo %}
+                        <div class="branding-current">
+                            <div class="branding-thumb">
+                                <img src="{{ branding.logo.url }}" alt="Current Logo">
+                            </div>
+                            <div class="branding-current-info">
+                                <span class="branding-filename">{{ branding.logo.name|cut:"branding/" }}</span>
+                                <label class="branding-remove">
+                                    <input type="checkbox" name="remove_logo" value="1"> Remove current logo
+                                </label>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="branding-placeholder">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                            <span>No logo uploaded</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="branding-upload-row">
+                        <label class="btn btn-secondary branding-upload-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            Upload Logo
+                            <input type="file" name="logo" accept="image/*" hidden>
+                        </label>
+                        <small style="color:var(--text-secondary);">Recommended: PNG with transparent background, 200×60px or larger.</small>
+                    </div>
+                </div>
+
+                <!-- Favicon Upload -->
+                <div class="form-group">
+                    <label>Favicon</label>
+                    <div class="branding-preview-area">
+                        {% if branding.favicon %}
+                        <div class="branding-current">
+                            <div class="branding-thumb branding-thumb-sm">
+                                <img src="{{ branding.favicon.url }}" alt="Current Favicon">
+                            </div>
+                            <div class="branding-current-info">
+                                <span class="branding-filename">{{ branding.favicon.name|cut:"branding/" }}</span>
+                                <label class="branding-remove">
+                                    <input type="checkbox" name="remove_favicon" value="1"> Remove current favicon
+                                </label>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="branding-placeholder">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                            <span>No favicon uploaded</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="branding-upload-row">
+                        <label class="btn btn-secondary branding-upload-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            Upload Favicon
+                            <input type="file" name="favicon" accept="image/*,.ico" hidden>
+                        </label>
+                        <small style="color:var(--text-secondary);">Recommended: 32×32 or 64×64 PNG/ICO.</small>
+                    </div>
+                </div>
+
+                <div style="border-top:1px solid var(--border-color);padding-top:20px;margin-top:8px;display:flex;gap:12px;">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Live preview when selecting a file
+document.querySelectorAll('.branding-upload-btn input[type="file"]').forEach(input => {
+    input.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const area = this.closest('.form-group').querySelector('.branding-preview-area');
+            const reader = new FileReader();
+            const isFavicon = this.name === 'favicon';
+            reader.onload = function(e) {
+                area.innerHTML = `
+                    <div class="branding-current">
+                        <div class="branding-thumb ${isFavicon ? 'branding-thumb-sm' : ''}">
+                            <img src="${e.target.result}" alt="Preview">
+                        </div>
+                        <div class="branding-current-info">
+                            <span class="branding-filename" style="color:var(--success);">New file selected</span>
+                        </div>
+                    </div>`;
+            };
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -71,6 +71,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'adAgency.context_processors.page_title',
                 'adAgency.context_processors.kill_switch_status',
+                'adAgency.context_processors.site_branding',
             ],
         },
     },

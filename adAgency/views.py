@@ -1,12 +1,13 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.db.models import Count
 from django.db.models.functions import TruncDate
 from django.utils import timezone
 from datetime import timedelta
 import json
 
-from ads.models import Ad
+from ads.models import Ad, SiteBranding
 from devices.models import Device
 from analytics.models import PlayLog
 
@@ -54,3 +55,39 @@ def dashboard(request):
         'chart_labels': chart_labels,
         'chart_data': chart_data,
     })
+
+
+@login_required
+def branding_settings(request):
+    if request.user.role != 'SUPERADMIN':
+        messages.error(request, 'You do not have permission to access this page.')
+        return redirect('dashboard')
+
+    branding = SiteBranding.get_solo()
+
+    if request.method == 'POST':
+        branding.site_name = request.POST.get('site_name', branding.site_name).strip() or branding.site_name
+
+        if 'logo' in request.FILES:
+            if branding.logo:
+                branding.logo.delete(save=False)
+            branding.logo = request.FILES['logo']
+
+        if 'favicon' in request.FILES:
+            if branding.favicon:
+                branding.favicon.delete(save=False)
+            branding.favicon = request.FILES['favicon']
+
+        if request.POST.get('remove_logo') == '1' and branding.logo:
+            branding.logo.delete(save=False)
+            branding.logo = None
+
+        if request.POST.get('remove_favicon') == '1' and branding.favicon:
+            branding.favicon.delete(save=False)
+            branding.favicon = None
+
+        branding.save()
+        messages.success(request, 'Branding updated successfully.')
+        return redirect('branding_settings')
+
+    return render(request, 'branding/settings.html', {'branding': branding})

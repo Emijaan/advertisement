@@ -1009,6 +1009,108 @@ textarea.form-control { resize: vertical; min-height: 80px; }
     }
 }
 
+/* Sidebar logo image */
+.sidebar-logo-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    object-fit: contain;
+}
+
+/* Branding settings page */
+.branding-preview-area {
+    margin-bottom: 12px;
+}
+
+.branding-current {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+}
+
+.branding-thumb {
+    width: 120px;
+    height: 60px;
+    border-radius: 8px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.branding-thumb img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.branding-thumb-sm {
+    width: 48px;
+    height: 48px;
+}
+
+.branding-current-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.branding-filename {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    word-break: break-all;
+}
+
+.branding-remove {
+    font-size: 12px;
+    color: var(--danger);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.branding-remove input {
+    accent-color: var(--danger);
+}
+
+.branding-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 24px;
+    background: var(--bg-secondary);
+    border: 2px dashed var(--border-color);
+    border-radius: 10px;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.branding-upload-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.branding-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
 /* Device grid for playback */
 .device-grid {
     display: grid;

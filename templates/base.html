@@ -4,7 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}DigiPlay{% endblock %} | DigiPlay Manager</title>
+    <title>{% block title %}{{ site_branding.site_name }}{% endblock %} | {{ site_branding.site_name }} Manager</title>
+    {% if site_branding.favicon %}
+    <link rel="icon" href="{{ site_branding.favicon.url }}" type="image/png">
+    {% endif %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">

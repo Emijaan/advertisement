@@ -9,7 +9,7 @@ from users.views import profile, user_settings, playback_control, user_list, use
 from devices.views import device_login, device_ads, device_play_log, device_list, device_detail, device_create, device_edit, device_delete, group_list, group_create, group_detail, group_edit, group_delete
 from ads.views import ad_list, ad_create, ad_edit, ad_delete, ad_toggle, kill_switch_toggle
 from analytics.views import analytics_dashboard
-from adAgency.views import dashboard
+from adAgency.views import dashboard, branding_settings
 
 router = DefaultRouter()
 
@@ -53,6 +53,7 @@ urlpatterns = [
 
     # Settings
     path('settings/', user_settings, name='user_settings'),
+    path('settings/branding/', branding_settings, name='branding_settings'),
 
     # User Management (SUPERADMIN only)
     path('users/', user_list, name='user_list'),
