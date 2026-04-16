@@ -5,42 +5,100 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | DigiPlay</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <script src="{% static 'js/main.js' %}"></script>
 </head>
 <body>
     <div class="login-page">
-        <div class="login-card card">
-            <div class="card-body">
-                <div class="login-logo">
-                    <svg width="28" height="28" fill="white" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" fill="none" stroke="white" stroke-width="2"/></svg>
+        <!-- Left branding panel -->
+        <div class="login-brand-panel">
+            <div class="login-brand-content">
+                <div class="login-brand-logo">
+                    <svg width="36" height="36" fill="white" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" fill="none" stroke="white" stroke-width="2"/></svg>
                 </div>
-                <h1>Welcome Back</h1>
-                <p class="subtitle">Sign in to your DigiPlay account</p>
-
-                {% if form.errors %}
-                <div style="background: #fee2e2; color: #991b1b; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; border: 1px solid #fecaca;">
-                    Invalid username or password. Please try again.
+                <h1 class="login-brand-title">DigiPlay</h1>
+                <p class="login-brand-tagline">Digital Signage Management Platform</p>
+                <div class="login-brand-features">
+                    <div class="login-feature">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        <span>Manage ads across all devices</span>
+                    </div>
+                    <div class="login-feature">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        <span>Real-time analytics &amp; insights</span>
+                    </div>
+                    <div class="login-feature">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        <span>Remote device monitoring</span>
+                    </div>
                 </div>
-                {% endif %}
+            </div>
+            <div class="login-brand-footer">
+                Powered by <strong>AP INFOTECH AND CYBER SOLUTION</strong>
+            </div>
+        </div>
 
-                <form method="post">
-                    {% csrf_token %}
-                    <div class="form-group">
-                        <label for="id_username">Username</label>
-                        <input type="text" name="username" id="id_username" class="form-control" placeholder="Enter your username" autofocus required>
+        <!-- Right login form panel -->
+        <div class="login-form-panel">
+            <div class="login-card">
+                <div class="login-card-inner">
+                    <div class="login-logo-mobile">
+                        <svg width="28" height="28" fill="white" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" fill="none" stroke="white" stroke-width="2"/></svg>
                     </div>
-                    <div class="form-group">
-                        <label for="id_password">Password</label>
-                        <input type="password" name="password" id="id_password" class="form-control" placeholder="Enter your password" required>
+                    <h1>Welcome Back</h1>
+                    <p class="subtitle">Sign in to your DigiPlay account</p>
+
+                    {% if form.errors %}
+                    <div class="login-error">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                        Invalid username or password. Please try again.
                     </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%; height: 44px; justify-content: center; font-size: 15px;">
-                        Sign In
-                    </button>
-                </form>
-                <div style="text-align:center;margin-top:16px;">
-                    <a href="{% url 'password_reset' %}" style="color:var(--primary);font-size:14px;">Forgot your password?</a>
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="id_username">Username</label>
+                            <div class="login-input-wrap">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                <input type="text" name="username" id="id_username" class="form-control" placeholder="Enter your username" autofocus required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="id_password">Password</label>
+                            <div class="login-input-wrap">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                <input type="password" name="password" id="id_password" class="form-control" placeholder="Enter your password" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary login-btn">
+                            Sign In
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        </button>
+                    </form>
+                    <div class="login-forgot">
+                        <a href="{% url 'password_reset' %}">Forgot your password?</a>
+                    </div>
+                </div>
+
+                <!-- Contact / Support footer -->
+                <div class="login-contact">
+                    <div class="login-contact-title">For Support or Business Inquiry</div>
+                    <div class="login-contact-items">
+                        <div class="login-contact-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            <span>A-9 Second Floor, Rohini Sector-19, Delhi 110085</span>
+                        </div>
+                        <div class="login-contact-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                            <span>7827847488 &nbsp;|&nbsp; 7827583338</span>
+                        </div>
+                        <div class="login-contact-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            <span>support1@apinfotechandcybersolution.com</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
